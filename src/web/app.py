@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
 from src.web.feed_creator import TwitterClient
-from src.web.url_converter import StringConverter
 from dotenv import load_dotenv, find_dotenv
 import os
 
@@ -8,7 +8,7 @@ import os
 load_dotenv(find_dotenv())
 app = Flask(__name__, template_folder=os.getenv("TEMPLATES_FOLDER"))
 app.static_folder = os.getenv("STATIC")
-#app.url_map.converters["string"] = StringConverter
+# app.url_map.converters["string"] = StringConverter
 twitter_client = TwitterClient()
 
 
@@ -56,13 +56,10 @@ streams = []
 
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
-    print("Starting")
-
-    print("Creating new stream")
     twitter_client.start_stream()
 
-    print("Added new stream, filtering")
-    return twitter_client.stream.filter(track=query_list, languages=["en"])
+    twitter_client.stream.filter(track=query_list, languages=["en"])
+    return "Done"
 
 
 if __name__ == '__main__':
