@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> Twitter Feed</title>
+</head>
+<style>
+    body {
+        background-image: url({{ url_for('static', filename="cool-background.png") }});
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+</style>
+<body>
+<h1> Twitter Feed </h1>
+<p> Welcome to a more responsible way of navigating Twitter! </p>
+<form action="#" method="POST">
+    <p><b> Search: </b><label>
+        <input type = "text" name = "search_term" />
+    </label></p>
+    <p><b> How many Tweets (<= 100) would you like to see? </b><label>
+        <input type = "number" name = "quantity" />
+    </label></p>
+    <p><input type = "submit" value = "Submit" /></p>
+</form>
+</body>
+</html>
