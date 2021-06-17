@@ -1,3 +1,4 @@
+werkzeug
 python-dotenv
 tweepy
 flask

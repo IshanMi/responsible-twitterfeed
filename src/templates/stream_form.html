@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> Twitter Feed</title>
+</head>
+<style>
+    body {
+        background-image: url({{ url_for('static', filename="cool-background.png") }});
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+</style>
+<body>
+<h1> Twitter Feed </h1>
+<p> Welcome to a more responsible way of navigating Twitter! </p>
+<form action="#" method="POST">
+    <p><b> Please enter as many search terms as you'd like, separated by a comma: </b><label>
+        <input type = "text" name = "search_terms" />
+    </label></p>
+    <p><input type = "submit" value = "Submit" /></p>
+</form>
+</body>
+</html>
