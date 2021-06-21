@@ -28,7 +28,9 @@ class MyStreamListener(tweepy.StreamListener):
         a = loads(raw_data)
         if 'text' not in a:
             print(a)
-        _log_tweet(tweet=a['text'], file='db_placeholder.txt')
+
+        else:
+            _log_tweet(tweet=a['text'], file='db_placeholder.txt')
         return True
 
 
