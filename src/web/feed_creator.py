@@ -2,6 +2,7 @@ import tweepy
 import os
 from dotenv import load_dotenv, find_dotenv
 from json import loads
+from time import time
 
 
 def _log_tweet(tweet, file='tweets.txt'):
@@ -12,6 +13,11 @@ def _log_tweet(tweet, file='tweets.txt'):
 
 
 class MyStreamListener(tweepy.StreamListener):
+
+    def __init__(self, limit=300):
+        self.start_time = time()
+        self.timeout = limit
+        # self.first_time = True
 
     def on_status(self, status):
         print(status.text)
@@ -26,12 +32,21 @@ class MyStreamListener(tweepy.StreamListener):
 
     def on_data(self, raw_data):
         a = loads(raw_data)
-        if 'text' not in a:
-            print(a)
 
+        if time() - self.start_time > self.timeout:
+            # End the stream after a given amount of time
+            return False
         else:
-            _log_tweet(tweet=a['text'], file='db_placeholder.txt')
-        return True
+            if 'text' not in a:
+                # Need to figure out what the error means
+                print(a)
+            else:
+                # if self.first_time:
+                #    print(a.keys())
+                #    self.first_time = False
+
+                _log_tweet(tweet=a['text'], file='db_placeholder.txt')
+            return True
 
 
 class TwitterClient:
@@ -55,5 +70,10 @@ class TwitterClient:
                 tweepy.Cursor(self.api.search, q=query, tweet_mode='extended').items(limit)]
 
     def start_stream(self):
+        # Disconnect all previous streams
+        for s in self.streams:
+            s.disconnect()
+
+        # Create new stream
         self.stream = tweepy.Stream(self.auth, MyStreamListener())
         self.streams.append(self.stream)

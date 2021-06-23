@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
+#from flask_sqlalchemy import SQLAlchemy
 from src.web.feed_creator import TwitterClient
 from dotenv import load_dotenv, find_dotenv
 import os
@@ -24,13 +24,20 @@ def get_search_term(cap=100):
 
         # Double check that it's a number
         try:
-            quantity = min(int(quantity), cap)
+            # Ensure 0 <= value <= cap
+            quantity = max(0, min(int(quantity), cap))
         except ValueError:
             quantity = cap
 
         return redirect(url_for('search_results', search_term=search_term, num=quantity))
 
 
+@app.route('/motivation')
+def motivation():
+    return render_template('motivation.html')
+
+
+@app.route('/search/<string:search_term>')
 @app.route('/search/<string:search_term>/<int:num>')
 def search_results(search_term, num: int = 20):
     """ This returns a static result, not a stream. """
@@ -46,7 +53,6 @@ def stream():
         return render_template("stream_form.html")
     else:
         search_terms = request.form.getlist("search_terms")[0].split(",")
-        print(search_terms)
         return redirect(url_for('go_live', query_list=search_terms))
 
 
