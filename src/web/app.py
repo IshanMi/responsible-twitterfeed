@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 #from flask_sqlalchemy import SQLAlchemy
 from src.web.feed_creator import TwitterClient
+from src.database import db_session
 from dotenv import load_dotenv, find_dotenv
 import os
 
@@ -8,6 +9,7 @@ import os
 load_dotenv(find_dotenv())
 app = Flask(__name__, template_folder=os.getenv("TEMPLATES_FOLDER"))
 app.static_folder = os.getenv("STATIC")
+app.config['DB_FOLDER'] = os.getenv("DB_FOLDER")
 # app.url_map.converters["string"] = StringConverter
 twitter_client = TwitterClient()
 
@@ -68,5 +70,17 @@ def go_live(query_list):
     return "Done"
 
 
+def setup_db():
+
+    db_file = os.path.join(
+        app.config['DB_FOLDER'],
+        'tweets.sqlite'
+    )
+
+    db_session.global_init(db_file)
+
+
 if __name__ == '__main__':
+    setup_db()
     app.run()
+
