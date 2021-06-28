@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for
-#from flask_sqlalchemy import SQLAlchemy
 from src.web.feed_creator import TwitterClient
 from src.database import db_session
 from dotenv import load_dotenv, find_dotenv
@@ -12,6 +11,11 @@ app.static_folder = os.getenv("STATIC")
 app.config['DB_FOLDER'] = os.getenv("DB_FOLDER")
 # app.url_map.converters["string"] = StringConverter
 twitter_client = TwitterClient()
+db_file = os.path.join(
+        app.config['DB_FOLDER'],
+        'tweets.sqlite'
+    )
+new_session_maker = db_session.create_session(db_file)
 
 
 @app.route('/', methods=["GET", "POST"])
@@ -58,29 +62,13 @@ def stream():
         return redirect(url_for('go_live', query_list=search_terms))
 
 
-# Global variable to keep track of all the streams
-streams = []
-
-
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
-    twitter_client.start_stream()
-
+    twitter_client.start_stream(factory_maker=new_session_maker)
     twitter_client.stream.filter(track=query_list, languages=["en"])
     return "Done"
 
 
-def setup_db():
-
-    db_file = os.path.join(
-        app.config['DB_FOLDER'],
-        'tweets.sqlite'
-    )
-
-    db_session.global_init(db_file)
-
-
 if __name__ == '__main__':
-    setup_db()
     app.run()
 

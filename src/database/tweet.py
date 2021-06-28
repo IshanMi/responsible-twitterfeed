@@ -4,12 +4,16 @@ import sqlalchemy
 from src.database.modelbase import SQLAlchemyBase
 
 
+def _get_time():
+    return datetime.now().strftime("%m/%d/%y, %H/%M/%S")
+
+
 class Tweet(SQLAlchemyBase):
 
     __tablename__ = "tweets"
 
     text = sqlalchemy.Column(sqlalchemy.String)  # text
-    time = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.now, index=True)  # created_at / timestamp_ms
+    time = sqlalchemy.Column(sqlalchemy.String, default=_get_time(), index=True)  # created_at / timestamp_ms
     id = sqlalchemy.Column(sqlalchemy.String, primary_key=True)  # id
     id_str = sqlalchemy.Column(sqlalchemy.String)  #id_str
 
