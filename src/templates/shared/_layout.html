@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title> {% block title %} Title {% endblock %} </title>
+</head>
+
+<style>
+    body {
+        background-image: url({{ url_for('static', filename="cool-background.png") }});
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+</style>
+
+<body>
+
+<!-- Navigation bar -->
+<nav>
+    <a href="/motivation">Motivation</a>
+    <a href="/"> Search for Tweets </a>
+    <a href="/stream">Live Twitter Feed</a>
+</nav>
+
+<!-- Main content of each page -->
+{% block main_content %}
+{% endblock %}
+
+
+<!-- Any additional JavaScript that the page needs to run -->
+{% block additional_js %}
+{% endblock %}
+
+</body>
+</html>

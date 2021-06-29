@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
 from src.web.feed_creator import TwitterClient
+from src.database import db_session
 from dotenv import load_dotenv, find_dotenv
 import os
 
@@ -8,8 +8,14 @@ import os
 load_dotenv(find_dotenv())
 app = Flask(__name__, template_folder=os.getenv("TEMPLATES_FOLDER"))
 app.static_folder = os.getenv("STATIC")
+app.config['DB_FOLDER'] = os.getenv("DB_FOLDER")
 # app.url_map.converters["string"] = StringConverter
 twitter_client = TwitterClient()
+db_file = os.path.join(
+        app.config['DB_FOLDER'],
+        'tweets.sqlite'
+    )
+new_session_maker = db_session.create_session(db_file)
 
 
 @app.route('/', methods=["GET", "POST"])
@@ -24,13 +30,20 @@ def get_search_term(cap=100):
 
         # Double check that it's a number
         try:
-            quantity = min(int(quantity), cap)
+            # Ensure 0 <= value <= cap
+            quantity = max(0, min(int(quantity), cap))
         except ValueError:
             quantity = cap
 
         return redirect(url_for('search_results', search_term=search_term, num=quantity))
 
 
+@app.route('/motivation')
+def motivation():
+    return render_template('motivation.html')
+
+
+@app.route('/search/<string:search_term>')
 @app.route('/search/<string:search_term>/<int:num>')
 def search_results(search_term, num: int = 20):
     """ This returns a static result, not a stream. """
@@ -46,21 +59,16 @@ def stream():
         return render_template("stream_form.html")
     else:
         search_terms = request.form.getlist("search_terms")[0].split(",")
-        print(search_terms)
         return redirect(url_for('go_live', query_list=search_terms))
-
-
-# Global variable to keep track of all the streams
-streams = []
 
 
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
-    twitter_client.start_stream()
-
+    twitter_client.start_stream(factory_maker=new_session_maker)
     twitter_client.stream.filter(track=query_list, languages=["en"])
     return "Done"
 
 
 if __name__ == '__main__':
     app.run()
+

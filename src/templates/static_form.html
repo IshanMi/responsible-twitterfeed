@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title> Twitter Feed</title>
-</head>
-<style>
-    body {
-        background-image: url({{ url_for('static', filename="cool-background.png") }});
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-size: cover;
-    }
-</style>
+
+{% extends "shared/_layout.html" %}
+
+{% block title %} Search {% endblock %}
+
 <body>
+
+{% block main_content %}
 <h1> Twitter Feed </h1>
 <p> Welcome to a more responsible way of navigating Twitter! </p>
 <form action="#" method="POST">
@@ -24,5 +19,8 @@
     </label></p>
     <p><input type = "submit" value = "Submit" /></p>
 </form>
+
+{% endblock %}
+
 </body>
 </html>

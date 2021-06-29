@@ -2,3 +2,4 @@ werkzeug
 python-dotenv
 tweepy
 flask
+sqlalchemy
