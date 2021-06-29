@@ -2,6 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for
 from src.web.feed_creator import TwitterClient
 from src.database import db_session
 from dotenv import load_dotenv, find_dotenv
+import redis
+from rq import Queue
+from rq.job import Job
+from src.database.worker import conn
+
 import os
 
 
@@ -16,6 +21,7 @@ db_file = os.path.join(
         'tweets.sqlite'
     )
 new_session_maker = db_session.create_session(db_file)
+q = Queue(connection=conn)
 
 
 @app.route('/', methods=["GET", "POST"])
@@ -64,8 +70,23 @@ def stream():
 
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
+
     twitter_client.start_stream(factory_maker=new_session_maker)
-    twitter_client.stream.filter(track=query_list, languages=["en"])
+    # start_stream_job = q.enqueue(
+    #     twitter_client.start_stream,
+    #     kwargs={
+    #         'factory_maker': new_session_maker
+    #     }
+    # )
+
+    filter_stream_job = q.enqueue(
+        twitter_client.stream.filter,
+        kwargs={
+            'track': query_list,
+            'languages': ["en"]
+        }
+    )
+    # depends_on=start_stream_job
     return "Done"
 
 
