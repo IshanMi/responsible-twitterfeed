@@ -2,10 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for
 from src.web.feed_creator import TwitterClient
 from src.database import db_session
 from dotenv import load_dotenv, find_dotenv
-import redis
 from rq import Queue
-from rq.job import Job
 from src.database.worker import conn
+from src.database.stream_job import stream_job
 
 import os
 
@@ -18,7 +17,7 @@ app.config['DB_FILE'] = os.getenv("DB_FILE")
 
 twitter_client = TwitterClient()
 new_session_maker = db_session.create_session_maker(conn=f'sqlite:///{app.config["DB_FILE"]}')
-new_session = new_session_maker.begin()
+new_session = new_session_maker()
 q = Queue(connection=conn)
 
 
@@ -69,22 +68,30 @@ def stream():
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
 
-    twitter_client.start_stream(factory=new_session)
-    # start_stream_job = q.enqueue(
-    #     twitter_client.start_stream,
+    # twitter_client.start_stream(factory=new_session)
+    # # start_stream_job = q.enqueue(
+    # #     twitter_client.start_stream,
+    # #     kwargs={
+    # #         'factory_maker': new_session_maker
+    # #     }
+    # # )
+    #
+    # filter_stream_job = q.enqueue(
+    #     twitter_client.stream.filter,
     #     kwargs={
-    #         'factory_maker': new_session_maker
+    #         'track': query_list,
+    #         'languages': ["en"],
+    #         'is_async': True
     #     }
     # )
-
-    filter_stream_job = q.enqueue(
-        twitter_client.stream.filter,
-        kwargs={
-            'track': query_list,
-            'languages': ["en"]
-        }
-    )
     # depends_on=start_stream_job
+    q.enqueue(
+        stream_job(
+            client=twitter_client,
+            factory=new_session,
+            queries=query_list
+        )
+    )
     return "Done"
 
 

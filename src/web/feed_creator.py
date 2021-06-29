@@ -8,7 +8,7 @@ from src.database.tweet import Tweet
 
 class MyStreamListener(tweepy.StreamListener):
 
-    def __init__(self, session=None, limit=10):
+    def __init__(self, session, limit=10):
         self._session = session
         self.start_time = time()
         self.timeout = limit
