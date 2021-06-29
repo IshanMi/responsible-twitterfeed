@@ -13,14 +13,12 @@ import os
 load_dotenv(find_dotenv())
 app = Flask(__name__, template_folder=os.getenv("TEMPLATES_FOLDER"))
 app.static_folder = os.getenv("STATIC")
-app.config['DB_FOLDER'] = os.getenv("DB_FOLDER")
+app.config['DB_FILE'] = os.getenv("DB_FILE")
 # app.url_map.converters["string"] = StringConverter
+
 twitter_client = TwitterClient()
-db_file = os.path.join(
-        app.config['DB_FOLDER'],
-        'tweets.sqlite'
-    )
-new_session_maker = db_session.create_session(db_file)
+new_session_maker = db_session.create_session_maker(conn=f'sqlite:///{app.config["DB_FILE"]}')
+new_session = new_session_maker.begin()
 q = Queue(connection=conn)
 
 
@@ -36,8 +34,8 @@ def get_search_term(cap=100):
 
         # Double check that it's a number
         try:
-            # Ensure 0 <= value <= cap
-            quantity = max(0, min(int(quantity), cap))
+            # Ensure 1 <= value <= cap
+            quantity = max(1, min(int(quantity), cap))
         except ValueError:
             quantity = cap
 
@@ -71,7 +69,7 @@ def stream():
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
 
-    twitter_client.start_stream(factory_maker=new_session_maker)
+    twitter_client.start_stream(factory=new_session)
     # start_stream_job = q.enqueue(
     #     twitter_client.start_stream,
     #     kwargs={
