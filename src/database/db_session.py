@@ -4,11 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from src.database.modelbase import SQLAlchemyBase
 
 
-def create_session(db_file: str) -> sessionmaker:
-    connection = "sqlite:///" + db_file.strip()
-    print(f'Connecting to DB @ {connection}')
-
-    engine = sqlalchemy.create_engine(connection, echo=True)
+def create_session_maker(conn: str) -> sessionmaker:
+    engine = sqlalchemy.create_engine(conn, echo=True)
     session_maker = orm.sessionmaker(bind=engine)
 
     SQLAlchemyBase.metadata.create_all(engine)

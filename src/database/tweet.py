@@ -12,13 +12,13 @@ class Tweet(SQLAlchemyBase):
 
     __tablename__ = "tweets"
 
+    tweet_id = sqlalchemy.Column(sqlalchemy.String, primary_key=True)  # id
     text = sqlalchemy.Column(sqlalchemy.String)  # text
-    time = sqlalchemy.Column(sqlalchemy.String, default=_get_time(), index=True)  # created_at / timestamp_ms
-    id = sqlalchemy.Column(sqlalchemy.String, primary_key=True)  # id
-    id_str = sqlalchemy.Column(sqlalchemy.String)  #id_str
+    time = sqlalchemy.Column(sqlalchemy.String, default=_get_time, index=True)  # created_at / timestamp_ms
+    id_str = sqlalchemy.Column(sqlalchemy.String)  # id_str
 
-    def __repr__(self):
-        return f'Tweet w/ID#{id}'
+    def __str__(self):
+        return f'Tweet w/ID#{self.tweet_id}'
 
 
 """

@@ -3,3 +3,5 @@ python-dotenv
 tweepy
 flask
 sqlalchemy
+redis
+rq
