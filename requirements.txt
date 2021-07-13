@@ -5,3 +5,4 @@ flask
 sqlalchemy
 redis
 rq
+flask-restful

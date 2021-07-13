@@ -5,19 +5,21 @@ from dotenv import load_dotenv, find_dotenv
 from rq import Queue
 from src.database.worker import conn
 from src.database.stream_job import stream_job
-
+from src.database.restful_api import Query
+from flask_restful import Api
 import os
 
 
 load_dotenv(find_dotenv())
 app = Flask(__name__, template_folder=os.getenv("TEMPLATES_FOLDER"))
 app.static_folder = os.getenv("STATIC")
-app.config['DB_FILE'] = os.getenv("DB_FILE")
+app.config['DATABASE_URL'] = os.getenv("DATABASE_URL")
+api = Api(app)
 # app.url_map.converters["string"] = StringConverter
 
-twitter_client = TwitterClient()
-new_session_maker = db_session.create_session_maker(conn=f'sqlite:///{app.config["DB_FILE"]}')
+new_session_maker = db_session.create_session_maker(conn=app.config["DATABASE_URL"])
 new_session = new_session_maker()
+twitter_client = TwitterClient(factory=new_session)
 q = Queue(connection=conn)
 
 
@@ -34,7 +36,12 @@ def get_search_term(cap=100):
         # Double check that it's a number
         try:
             # Ensure 1 <= value <= cap
-            quantity = max(1, min(int(quantity), cap))
+
+            # Ensure # of tweets shown < cap
+            quantity = min(int(quantity), cap)
+
+            # Ensure # of tweets shown is >= 1
+            quantity = max(1, quantity)
         except ValueError:
             quantity = cap
 
@@ -67,34 +74,16 @@ def stream():
 
 @app.route('/live/<string:query_list>', methods=["GET", "POST"])
 def go_live(query_list):
+    twitter_client.start_stream()
 
-    # twitter_client.start_stream(factory=new_session)
-    # # start_stream_job = q.enqueue(
-    # #     twitter_client.start_stream,
-    # #     kwargs={
-    # #         'factory_maker': new_session_maker
-    # #     }
-    # # )
-    #
-    # filter_stream_job = q.enqueue(
-    #     twitter_client.stream.filter,
-    #     kwargs={
-    #         'track': query_list,
-    #         'languages': ["en"],
-    #         'is_async': True
-    #     }
-    # )
-    # depends_on=start_stream_job
-    q.enqueue(
-        stream_job(
-            client=twitter_client,
-            factory=new_session,
-            queries=query_list
-        )
-    )
-    return "Done"
+    try:
+        q.enqueue(stream_job(client=twitter_client, queries=query_list))
+    except AttributeError:
+        pass
+    api.add_resource(Query, '/db/<string:query_list>a')
+
+    return "Database has been populated with tweets"
 
 
 if __name__ == '__main__':
     app.run()
-

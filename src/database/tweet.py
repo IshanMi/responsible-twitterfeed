@@ -20,6 +20,17 @@ class Tweet(SQLAlchemyBase):
     def __str__(self):
         return f'Tweet w/ID#{self.tweet_id}'
 
+    def __getstate__(self):
+        return {
+            'tweet_id': self.tweet_id,
+            'text': self.text,
+            'time': self.time,
+            'id_str': self.id_str
+        }
+
+    def __setstate__(self, state):
+        self.update(state)
+
 
 """
 All keys belonging to a Tweet:

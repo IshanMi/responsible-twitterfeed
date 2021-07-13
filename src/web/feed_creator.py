@@ -20,35 +20,37 @@ class MyStreamListener(tweepy.StreamListener):
         if status_code == 420:
             # Disconnects the stream
             return False
-        else:
-            print(f'Error code: {status_code}')
-            return False
+
+        print(f'Error code: {status_code}')
+        return False
 
     def on_data(self, raw_data):
         tweet_data = loads(raw_data)
 
         if time() - self.start_time > self.timeout:
             # End the stream after a given amount of time
+            print("Time-out")
             return False
-        else:
-            try:
-                new_tweet = Tweet()
-                new_tweet.text = tweet_data['text']
-            except KeyError:
-                return True
 
-            new_tweet.tweet_id = tweet_data['id']
-            new_tweet.id_str = tweet_data['id_str']
-            new_tweet.time = tweet_data['created_at']
-
-            # Add this Tweet to DB
-            self._session.add(new_tweet)
-            self._session.commit()
+        # print(time()-self.start_time)
+        try:
+            new_tweet = Tweet()
+            new_tweet.text = tweet_data['text']
+        except KeyError:
             return True
+
+        new_tweet.tweet_id = tweet_data['id']
+        new_tweet.id_str = tweet_data['id_str']
+        new_tweet.time = tweet_data['created_at']
+
+        # Add this Tweet to DB
+        self._session.add(new_tweet)
+        self._session.commit()
+        return True
 
 
 class TwitterClient:
-    def __init__(self):
+    def __init__(self, factory):
         load_dotenv(find_dotenv())
         self.auth = tweepy.OAuthHandler(consumer_key=os.getenv("API_KEY"), consumer_secret=os.getenv("API_SECRET_KEY"))
         access_token = os.getenv("ACCESS_TOKEN")
@@ -57,6 +59,7 @@ class TwitterClient:
         self.api = tweepy.API(self.auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
         self.streams = []
         self.stream = None
+        self.factory = factory
 
         try:
             self.redirect_url = self.auth.get_authorization_url()
@@ -67,11 +70,11 @@ class TwitterClient:
         return [t.full_text.encode('ascii', errors='ignore') for t in
                 tweepy.Cursor(self.api.search, q=query, tweet_mode='extended').items(limit)]
 
-    def start_stream(self, factory):
+    def start_stream(self):
         # Disconnect all previous streams
         for s in self.streams:
             s.disconnect()
 
         # Create new stream
-        self.stream = tweepy.Stream(self.auth, MyStreamListener(session=factory))
+        self.stream = tweepy.Stream(self.auth, MyStreamListener(session=self.factory))
         self.streams.append(self.stream)
